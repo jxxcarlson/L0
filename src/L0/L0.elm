@@ -5,6 +5,7 @@ import Dict exposing (Dict)
 import Element exposing (..)
 import Element.Font as Font
 import Html.Attributes
+import L0.ASTTools
 import L0.MExpression exposing (MExpression(..))
 import L0.Utility as Utility
 import L0.Widget as Widget
@@ -54,7 +55,10 @@ fDict =
         , ( "b", \format expr -> wrappedRow [ width fill, Font.bold ] [ view format expr ] )
         , ( "red", \format expr -> wrappedRow [ width fill, Font.color (rgb255 190 0 0) ] [ view format expr ] )
         , ( "blue", \format expr -> wrappedRow [ width fill, Font.color (rgb255 0 0 200) ] [ view format expr ] )
-        , ( "image2", \format expr -> image2 format expr )
+        , ( "image", \format expr -> image format expr )
+        , ( "heading1", \format expr -> heading1 format expr )
+        , ( "heading2", \format expr -> heading2 format expr )
+        , ( "heading3", \format expr -> heading3 format expr )
 
         --, ( "sum", \format args expr -> Widget.sum args expr )
         , ( "preformatted", \format expr -> preformatted format expr )
@@ -68,12 +72,60 @@ fDict =
         ]
 
 
-image2 format expr =
+heading1 format expr =
+    case expr of
+        MList [ Literal str ] ->
+            Element.el [ Font.size 32, verticalPadding 32 8 ] (Element.text str)
+
+        _ ->
+            Element.el [ Font.size 32, verticalPadding 32 8 ] (Element.text "Bad data for heading")
+
+
+heading2 format expr =
+    case expr of
+        MList [ Literal str ] ->
+            Element.el [ Font.size 24, verticalPadding 24 8 ] (Element.text str)
+
+        _ ->
+            Element.el [ Font.size 24, verticalPadding 24 8 ] (Element.text "Bad data for heading")
+
+
+heading3 format expr =
+    case expr of
+        MList [ Literal str ] ->
+            Element.el [ Font.size 18, verticalPadding 18 8 ] (Element.text str)
+
+        _ ->
+            Element.el [ Font.size 18, verticalPadding 18 8 ] (Element.text "Bad data for heading")
+
+
+verticalPadding top bottom =
+    Element.paddingEach { left = 0, right = 0, top = top, bottom = bottom }
+
+
+image format expr_ =
     let
-        _ =
-            Debug.log "image2, expr" expr
+        w =
+            500
+
+        expr =
+            Debug.log "EXPR" (L0.ASTTools.normalize expr_)
     in
-    Element.none
+    case expr of
+        MList [ opts_, Literal url_ ] ->
+            column [ spacing 8, Element.width (px w) ]
+                [ Element.image [ Element.width (px w) ]
+                    { src = url_, description = "image" }
+                ]
+
+        MList [ Literal url_ ] ->
+            column [ spacing 8, Element.width (px w) ]
+                [ Element.image [ Element.width (px w) ]
+                    { src = url_, description = "image" }
+                ]
+
+        _ ->
+            Element.el [ Font.size 14 ] (Element.text "Error: bad data for image")
 
 
 
@@ -294,8 +346,8 @@ linkColor =
     Font.color (Element.rgb255 0 0 245)
 
 
-image : Format -> List String -> MExpression -> Element msg
-image format args body =
+image1 : Format -> List String -> MExpression -> Element msg
+image1 format args body =
     let
         dict =
             Utility.keyValueDict args

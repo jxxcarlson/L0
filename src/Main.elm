@@ -68,7 +68,7 @@ type Msg
 
 
 type ViewMode
-    = ViewCampdown
+    = ViewL0
     | ViewAST
     | ViewAbout
 
@@ -87,7 +87,7 @@ init flags url key =
       , url = url
       , contents = sourceText
       , document = doc
-      , viewMode = ViewAST
+      , viewMode = ViewL0
       }
     , Cmd.none
     )
@@ -128,7 +128,7 @@ update msg model =
             ( model, Cmd.none )
 
         ShowAST ->
-            ( { model | viewMode = ViewCampdown }, Cmd.none )
+            ( { model | viewMode = ViewL0 }, Cmd.none )
 
         ShowCampdown ->
             ( { model | viewMode = ViewAST }, Cmd.none )
@@ -199,7 +199,7 @@ viewDocument model =
         ViewAST ->
             viewAST model
 
-        ViewCampdown ->
+        ViewL0 ->
             viewL0 model
 
         ViewAbout ->
@@ -340,7 +340,7 @@ toggleViewButton viewMode =
                     }
                 ]
 
-        ViewCampdown ->
+        ViewL0 ->
             row []
                 [ Input.button buttonStyle
                     { onPress = Just ShowCampdown
@@ -438,7 +438,7 @@ They look like this:
 
 sourceText =
     """
-[image [opt width:300, caption:'Blue bird'] URL]
+[image [opt width:300, caption:'Blue bird'] https://www.nhm.ac.uk/content/dam/nhmwww/discover/garden-birds/winter-birds-blue-tit-two-column.jpg.thumb.768.768.jpg]
 
 
 [blue flowers]

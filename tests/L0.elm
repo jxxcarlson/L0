@@ -29,7 +29,13 @@ suite =
     Test.describe "L0 parser"
         [ test "simple element" "[blue flowers]" [ MList [ MElement "blue" (MList [ Literal "flowers" ]) ] ]
         , test "nested elements" "[blue [i flowers]]" [ MList [ MElement "blue" (MList [ MElement "i" (MList [ Literal "flowers" ]) ]) ] ]
-        , test "element with options"
+        , test "image element with options"
             """[image [opt width:300, caption:'Blue bird'] URL]"""
             [ MList [ MElement "image" (MList [ MElement "opt" (MList [ Literal "width:300, caption:'Blue bird'" ]), Literal "URL" ]) ] ]
+        , test "image element with empty options"
+            """[image URL]"""
+            [ MList [ MElement "image" (MList [ Literal "URL" ]) ] ]
+        , test "heading1"
+            """[heading1 Introduction to Bird Watching]"""
+            [ MList [ MElement "heading1" (MList [ Literal "Introduction to Bird Watching" ]) ] ]
         ]
