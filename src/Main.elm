@@ -438,6 +438,8 @@ They look like this:
 
 sourceText =
     """
+[image [opt width:300, caption:'Blue bird'] URL]
+
 
 [blue flowers]
 

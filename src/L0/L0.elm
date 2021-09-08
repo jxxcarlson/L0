@@ -54,8 +54,8 @@ fDict =
         , ( "b", \format expr -> wrappedRow [ width fill, Font.bold ] [ view format expr ] )
         , ( "red", \format expr -> wrappedRow [ width fill, Font.color (rgb255 190 0 0) ] [ view format expr ] )
         , ( "blue", \format expr -> wrappedRow [ width fill, Font.color (rgb255 0 0 200) ] [ view format expr ] )
+        , ( "image2", \format expr -> image2 format expr )
 
-        --, ( "image", \format  expr -> image format args expr )
         --, ( "sum", \format args expr -> Widget.sum args expr )
         , ( "preformatted", \format expr -> preformatted format expr )
         , ( "indent", \format expr -> indent format expr )
@@ -66,6 +66,14 @@ fDict =
         --, ( "row", \format args expr -> Element.none )
         --, ( "list", \format args expr -> list format args expr )
         ]
+
+
+image2 format expr =
+    let
+        _ =
+            Debug.log "image2, expr" expr
+    in
+    Element.none
 
 
 
