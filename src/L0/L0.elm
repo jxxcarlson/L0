@@ -23,8 +23,8 @@ view format mexpr =
         Literal str ->
             text str
 
-        MElement fname args mexpr2 ->
-            viewElement format fname args mexpr2
+        MElement fname mexpr2 ->
+            viewElement format fname mexpr2
 
         MList list_ ->
             paragraph [ width fill ] (List.map (view format) list_)
@@ -37,47 +37,50 @@ pe =
     paddingEach { top = 0, bottom = 12, left = 0, right = 0 }
 
 
-viewElement : Format -> String -> List String -> MExpression -> Element msg
-viewElement format fname args mexpr =
+viewElement : Format -> String -> MExpression -> Element msg
+viewElement format fname mexpr =
     case Dict.get fname fDict of
         Nothing ->
             text <| "Function " ++ fname ++ " not found, args " ++ Debug.toString mexpr
 
         Just f ->
-            f format args mexpr
+            f format mexpr
 
 
-fDict : Dict String (Format -> List String -> MExpression -> Element msg)
+fDict : Dict String (Format -> MExpression -> Element msg)
 fDict =
     Dict.fromList
-        [ ( "i", \format _ expr -> wrappedRow [ width fill, Font.italic ] [ view format expr ] )
-        , ( "b", \format _ expr -> wrappedRow [ width fill, Font.bold ] [ view format expr ] )
-        , ( "red", \format _ expr -> wrappedRow [ width fill, Font.color (rgb255 190 0 0) ] [ view format expr ] )
-        , ( "blue", \format _ expr -> wrappedRow [ width fill, Font.color (rgb255 0 0 200) ] [ view format expr ] )
-        , ( "image", \format args expr -> image format args expr )
-        , ( "sum", \format args expr -> Widget.sum args expr )
-        , ( "preformatted", \format _ expr -> preformatted format expr )
-        , ( "indent", \format _ expr -> indent format expr )
-        , ( "bargraph", \format args expr -> Widget.bargraph args expr )
-        , ( "link", \format args expr -> link format args expr )
-        , ( "spreadsheet", \format args expr -> spreadsheet format args expr )
-        , ( "row", \format args expr -> Element.none )
-        , ( "list", \format args expr -> list format args expr )
+        [ ( "i", \format expr -> wrappedRow [ width fill, Font.italic ] [ view format expr ] )
+        , ( "b", \format expr -> wrappedRow [ width fill, Font.bold ] [ view format expr ] )
+        , ( "red", \format expr -> wrappedRow [ width fill, Font.color (rgb255 190 0 0) ] [ view format expr ] )
+        , ( "blue", \format expr -> wrappedRow [ width fill, Font.color (rgb255 0 0 200) ] [ view format expr ] )
+
+        --, ( "image", \format  expr -> image format args expr )
+        --, ( "sum", \format args expr -> Widget.sum args expr )
+        , ( "preformatted", \format expr -> preformatted format expr )
+        , ( "indent", \format expr -> indent format expr )
+
+        --, ( "bargraph", \format args expr -> Widget.bargraph args expr )
+        --, ( "link", \format args expr -> link format args expr )
+        --, ( "spreadsheet", \format args expr -> spreadsheet format args expr )
+        --, ( "row", \format args expr -> Element.none )
+        --, ( "list", \format args expr -> list format args expr )
         ]
 
 
-list format args_ body =
-    let
-        dict =
-            Utility.keyValueDict args_
-    in
-    case body of
-        MList list_ ->
-            column [ spacing 4, listPadding ]
-                (elementTitle args_ :: List.indexedMap (\k item_ -> renderListItem (getPrefixSymbol k dict) format item_) (filterOutBlankItems list_))
 
-        _ ->
-            el [ Font.color redColor ] (text "Malformed list")
+--list format args_ body =
+--    let
+--        dict =
+--            Utility.keyValueDict args_
+--    in
+--    case body of
+--        MList list_ ->
+--            column [ spacing 4, listPadding ]
+--                (elementTitle args_ :: List.indexedMap (\k item_ -> renderListItem (getPrefixSymbol k dict) format item_) (filterOutBlankItems list_))
+--
+--        _ ->
+--            el [ Font.color redColor ] (text "Malformed list")
 
 
 filterOutBlankItems : List MExpression -> List MExpression
@@ -113,25 +116,22 @@ getPrefixSymbol k dict =
             el [ Font.size 16 ] (text str)
 
 
-renderListItem prefixSymbol renderArgs elt =
-    case elt of
-        MElement "item" _ body ->
-            row [ spacing 8 ] [ el [ alignTop, moveDown 2 ] prefixSymbol, view renderArgs elt ]
 
-        MElement "list" args body ->
-            let
-                dict =
-                    Utility.keyValueDict args
-            in
-            case body of
-                MList list_ ->
-                    column [ spacing 4, listPadding ] (elementTitle args :: List.indexedMap (\k item_ -> renderListItem (getPrefixSymbol k dict) renderArgs item_) (filterOutBlankItems list_))
-
-                _ ->
-                    el [ Font.color redColor ] (text "Malformed list")
-
-        _ ->
-            Element.none
+--renderListItem prefixSymbol renderArgs elt =
+--    case elt of
+--        MElement "item" body ->
+--            row [ spacing 8 ] [ el [ alignTop, moveDown 2 ] prefixSymbol, view renderArgs elt ]
+--
+--        MElement "list" body ->
+--            case body of
+--                MList list_ ->
+--                    column [ spacing 4, listPadding ] (elementTitle args :: List.indexedMap (\k item_ -> renderListItem (getPrefixSymbol k dict) renderArgs item_) (filterOutBlankItems list_))
+--
+--                _ ->
+--                    el [ Font.color redColor ] (text "Malformed list")
+--
+--        _ ->
+--            Element.none
 
 
 redColor =
@@ -214,25 +214,25 @@ indentPadding =
     paddingEach { left = 24, right = 0, top = 0, bottom = 0 }
 
 
-getRows_ body =
-    case body of
-        MList list_ ->
-            List.map getRow list_
-                |> List.filter (\s -> s /= "")
-                |> List.map (String.split ",")
-                |> List.map (List.map String.trim)
 
-        _ ->
-            [ [] ]
-
-
-getRow element =
-    case element of
-        MElement "row" [] (MList [ Literal t ]) ->
-            t
-
-        _ ->
-            ""
+--getRows_ body =
+--    case body of
+--        MList list_ ->
+--            List.map getRow list_
+--                |> List.filter (\s -> s /= "")
+--                |> List.map (String.split ",")
+--                |> List.map (List.map String.trim)
+--
+--        _ ->
+--            [ [] ]
+--
+--getRow element =
+--    case element of
+--        MElement "row" [] (MList [ Literal t ]) ->
+--            t
+--
+--        _ ->
+--            ""
 
 
 indent : Format -> MExpression -> Element msg

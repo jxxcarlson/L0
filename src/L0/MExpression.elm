@@ -7,7 +7,7 @@ import L0.Config
 
 type MExpression
     = Literal String
-    | MElement String (List String) MExpression
+    | MElement String MExpression
     | MList (List MExpression)
     | MProblem String
 
@@ -19,7 +19,7 @@ fromElement element =
             fromMarkup contents
 
         Syntax.Preformatted { contents } ->
-            MElement "preformatted" [] (Literal contents)
+            MElement "preformatted" (Literal contents)
 
         Syntax.Item _ ->
             Literal "item: not implemented"
@@ -45,7 +45,7 @@ fromText text =
         Syntax.Verbatim _ ( _, str ) ->
             Literal str
 
-        Syntax.Annotation prefix textList maybeSuffix maybeLocCommand ->
+        Syntax.Annotation prefix textList _ _ ->
             if Loc.value prefix /= "[" then
                 MProblem "Error: '[' expected"
 
@@ -77,7 +77,7 @@ fromText text =
                                     in
                                     case List.head rest of
                                         Nothing ->
-                                            MElement fname [] (MList (Literal arg :: List.map fromText rest))
+                                            MElement fname (MList (Literal arg :: List.map fromText rest))
 
                                         Just possibleArg ->
                                             let
@@ -106,10 +106,10 @@ fromText text =
                                                     rest2 =
                                                         List.drop 1 rest
                                                 in
-                                                MElement fname args2 (MList (List.map fromText rest2))
+                                                MElement fname (MList (List.map fromText rest2))
 
                                             else
-                                                MElement fname [] (MList (Literal arg :: List.map fromText rest))
+                                                MElement fname (MList (Literal arg :: List.map fromText rest))
 
                                 else
                                     Literal "(I was expecting '[' or '|')"
