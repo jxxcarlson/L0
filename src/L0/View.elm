@@ -8,7 +8,7 @@ import L0.L0 as ViewMExpression exposing (Format)
 import L0.MExpression as MExpression exposing (MExpression)
 
 
-viewSection : Format -> Section -> Element.Element msg
+viewSection : Format -> Syntax.Section -> Element.Element msg
 viewSection format { level, contents, label } =
     let
         title =
@@ -33,17 +33,13 @@ view format _ { prelude, sections } =
     viewElements format prelude :: List.map (viewSection format) sections
 
 
-viewElements : Format -> List Element -> Element.Element msg
+viewElements : Format -> List Syntax.Element -> Element.Element msg
 viewElements format elements =
     column [ width (px format.lineWidth), spacing 18 ] <| List.map (\element_ -> viewElement format element_) elements
 
 
-viewElement : Format -> Element -> Element.Element msg
+viewElement : Format -> Syntax.Element -> Element.Element msg
 viewElement format elem =
-    --let
-    --    _ =
-    --        Debug.log "MExpression" (MExpression.fromElement elem)
-    --in
     el [ alignLeft ] (ViewMExpression.view format (MExpression.fromElement elem))
 
 

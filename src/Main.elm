@@ -9,7 +9,7 @@ module Main exposing (main)
 import ASTTools
 import Browser exposing (UrlRequest(..))
 import Browser.Navigation as Nav exposing (Key)
-import Camperdown.Config.Config as Config
+import Camperdown.Config as Config
 import Camperdown.Parse
 import Camperdown.Parse.Syntax exposing (Document, Label(..), Section)
 import Docs
@@ -24,11 +24,12 @@ import Html.Attributes
 import Html.Events
 import Json.Decode as Decode
 import Json.Encode as Encode
+import L0.Config
+import L0.View
 import Markdown
 import Task
 import Url exposing (Url)
 import View.AST
-import View.Campdown
 
 
 main =
@@ -80,7 +81,7 @@ init : Flags -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
 init flags url key =
     let
         doc =
-            Just (Camperdown.Parse.parse Config.config sourceText |> Debug.log "AST")
+            Just (Camperdown.Parse.parse L0.Config.config sourceText |> Debug.log "AST")
     in
     ( { key = key
       , url = url
@@ -108,9 +109,7 @@ update msg model =
         InputText str ->
             ( { model
                 | contents = str
-
-                --, viewMode = ViewCampdown
-                , document = Just (Camperdown.Parse.parse Config.config str)
+                , document = Just (Camperdown.Parse.parse L0.Config.config str)
               }
             , Cmd.none
             )
@@ -147,7 +146,7 @@ update msg model =
             ( model, Task.perform LoadFileContents (File.toString file) )
 
         LoadFileContents contents ->
-            ( { model | contents = contents, document = Just (Camperdown.Parse.parse Config.config contents) }, Cmd.none )
+            ( { model | contents = contents, document = Just (Camperdown.Parse.parse L0.Config.config contents) }, Cmd.none )
 
 
 
@@ -201,27 +200,26 @@ viewDocument model =
             viewAST model
 
         ViewCampdown ->
-            viewCampDown model
+            viewL0 model
 
         ViewAbout ->
             text "Not implemented"
 
 
-viewCampDown : Model -> Element msg
-viewCampDown model =
+viewL0 : Model -> Element msg
+viewL0 model =
     case model.document of
         Nothing ->
             Element.none
 
         Just doc ->
-            column [ height (px 700), width (px 500), scrollbarY ]
-                (View.Campdown.view ourFormat model.contents doc)
+            column [ height (px 700), width (px 500), scrollbarY, Font.size 14 ]
+                (L0.View.view ourFormat model.contents doc)
 
 
 ourFormat =
     -- Units = pixels
-    { imageHeight = 300
-    , lineWidth = 500
+    { lineWidth = 500
     , leftPadding = 15
     , bottomPadding = 8
     , topPadding = 8
@@ -292,7 +290,7 @@ loadContent model text =
 
 
 documentFromString str =
-    Camperdown.Parse.parse Config.config str
+    Camperdown.Parse.parse L0.Config.config str
 
 
 editor model =
@@ -346,7 +344,7 @@ toggleViewButton viewMode =
             row []
                 [ Input.button buttonStyle
                     { onPress = Just ShowCampdown
-                    , label = el [ centerX, centerY ] (text "Campdown")
+                    , label = el [ centerX, centerY ] (text "L0")
                     }
                 ]
 
@@ -371,7 +369,7 @@ aboutButton viewMode =
             row []
                 [ Input.button buttonStyle
                     { onPress = Just ShowCampdown
-                    , label = el [ centerX, centerY ] (text "Campdown")
+                    , label = el [ centerX, centerY ] (text "L0")
                     }
                 ]
 

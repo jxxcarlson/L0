@@ -51,8 +51,11 @@ fromText text =
 
             else
                 let
-                    foo =
-                        1
+                    _ =
+                        Debug.log "prefix" prefix
+
+                    _ =
+                        Debug.log "textList" textList
                 in
                 case textList of
                     [] ->

@@ -2,7 +2,7 @@ module View.AST exposing (view)
 
 -- exposing (Document, Label(..), Section)
 
-import Camperdown.Config.Config as Config
+import Camperdown.Config as Config
 import Camperdown.Loc as Loc exposing (Loc)
 import Camperdown.Parse
 import Camperdown.Parse.Syntax as Syntax
