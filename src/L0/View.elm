@@ -1,6 +1,6 @@
 module L0.View exposing (view)
 
-import Camperdown.Camperdown as Camp
+import Camperdown.Parse.Syntax as Syntax
 import Element exposing (..)
 import Element.Font as Font
 import Html.Attributes
@@ -8,47 +8,15 @@ import L0.L0 as ViewMExpression exposing (Format)
 import L0.MExpression as MExpression exposing (MExpression)
 
 
-type alias Document =
-    Camp.Document OriginalDivert (Camp.Mark String) Char ( String, Maybe String, Maybe String ) String
-
-
-type alias Section =
-    Camp.Section OriginalDivert (Camp.Mark String) Char ( String, Maybe String, Maybe String ) String
-
-
-type alias Element =
-    Camp.Element RewrittenDivert (Camp.Mark String) Char ( String, Maybe String, Maybe String ) String
-
-
-type alias Command =
-    Camp.Command (Camp.Mark String) Char ( String, Maybe String, Maybe String ) String
-
-
-type alias OriginalDivert =
-    Camp.Divert (Camp.Mark String) Char ( String, Maybe String, Maybe String ) String
-
-
-type alias RewrittenDivert =
-    Camp.Divert (Camp.Mark String) Char ( String, Maybe String, Maybe String ) String
-
-
-type alias Text =
-    Camp.Text Char ( String, Maybe String, Maybe String ) String
-
-
-type alias Value =
-    Camp.Value Char ( String, Maybe String, Maybe String ) String
-
-
 viewSection : Format -> Section -> Element.Element msg
 viewSection format { level, contents, label } =
     let
         title =
             case label of
-                Camp.Named ( _, s ) ->
+                Syntax.Named ( _, s ) ->
                     s
 
-                Camp.Anonymous n ->
+                Syntax.Anonymous n ->
                     "(Passage beginning on line " ++ String.fromInt n ++ ")"
 
         attrs =
@@ -60,7 +28,7 @@ viewSection format { level, contents, label } =
         ]
 
 
-view : Format -> String -> Document -> List (Element.Element msg)
+view : Format -> String -> Syntax.Document -> List (Element.Element msg)
 view format _ { prelude, sections } =
     viewElements format prelude :: List.map (viewSection format) sections
 
