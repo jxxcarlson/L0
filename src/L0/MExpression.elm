@@ -1,7 +1,8 @@
 module L0.MExpression exposing (MExpression(..), fromElement, getText)
 
-import Camperdown.Camperdown as Camp
-import L0.CamperdownParserTypes exposing (..)
+import Camperdown.Loc as Loc
+import Camperdown.Parse.Syntax as Syntax
+import L0.Config
 
 
 type MExpression
@@ -11,114 +12,115 @@ type MExpression
     | MProblem String
 
 
-fromElement : Element -> MExpression
+fromElement : Syntax.Element -> MExpression
 fromElement element =
     case element of
-        Camp.Paragraph markup ->
-            fromMarkup markup
+        Syntax.Paragraph { contents } ->
+            fromMarkup contents
 
-        Camp.Preformatted { contents } ->
+        Syntax.Preformatted { contents } ->
             MElement "preformatted" [] (Literal contents)
 
-        Camp.Item _ ->
+        Syntax.Item _ ->
             Literal "item: not implemented"
 
-        Camp.Command _ ->
+        Syntax.Command _ ->
             Literal "command: not implemented"
 
-        Camp.Problem { problem } ->
+        Syntax.Problem { problem } ->
             Literal ("Problem: " ++ problem)
 
 
-fromMarkup : Markup -> MExpression
+fromMarkup : Syntax.Markup -> MExpression
 fromMarkup textList =
     List.map fromText textList |> MList
 
 
-fromText : Text -> MExpression
+fromText : Syntax.Text -> MExpression
 fromText text =
     case text of
-        Camp.Raw str ->
+        Syntax.Raw str ->
             Literal str
 
-        Camp.Verbatim _ ( _, str ) ->
+        Syntax.Verbatim _ ( _, str ) ->
             Literal str
 
-        Camp.Annotation markup ->
-            let
-                ( _, ( ( mark, _, _ ), _ ) ) =
-                    markup.annotation
-            in
-            case markup.markup of
-                ( _, [] ) ->
-                    Literal "(invalid annotation)"
+        Syntax.Annotation prefix textList maybeSuffix maybeLocCommand ->
+            if Loc.value prefix /= "[" then
+                MProblem "Error: '[' expected"
 
-                ( _, head :: rest ) ->
-                    case head of
-                        Camp.Raw str ->
-                            if mark == "[" then
-                                let
-                                    firstSpace =
-                                        List.head (String.indices " " str) |> Maybe.withDefault 1
+            else
+                let
+                    foo =
+                        1
+                in
+                case textList of
+                    [] ->
+                        Literal "(invalid annotation)"
 
-                                    fname =
-                                        String.left firstSpace str
+                    head :: rest ->
+                        case head of
+                            Syntax.Raw str ->
+                                if Loc.value prefix == "[" then
+                                    let
+                                        firstSpace =
+                                            List.head (String.indices " " str) |> Maybe.withDefault 1
 
-                                    arg =
-                                        String.dropLeft firstSpace str
-                                in
-                                case List.head rest of
-                                    Nothing ->
-                                        MElement fname [] (MList (Literal arg :: List.map fromText rest))
+                                        fname =
+                                            String.left firstSpace str
 
-                                    Just possibleArg ->
-                                        let
-                                            ( mark2, args2 ) =
-                                                case possibleArg of
-                                                    Camp.Annotation yada ->
-                                                        let
-                                                            ( _, ( ( mark_, _, _ ), _ ) ) =
-                                                                yada.annotation
-
-                                                            ( _, rawtextlist ) =
-                                                                yada.markup
-
-                                                            args_ =
-                                                                List.head rawtextlist
-                                                                    |> Maybe.andThen getText
-                                                                    |> Maybe.map (String.split "," >> List.map String.trim)
-                                                                    |> Maybe.withDefault []
-                                                        in
-                                                        ( mark_, args_ )
-
-                                                    _ ->
-                                                        ( "(error)", [] )
-                                        in
-                                        if mark2 == "|" then
-                                            let
-                                                --args =
-                                                --    String.split ", " "a:1, b:2" |> List.map String.trim
-                                                rest2 =
-                                                    List.drop 1 rest
-                                            in
-                                            MElement fname args2 (MList (List.map fromText rest2))
-
-                                        else
+                                        arg =
+                                            String.dropLeft firstSpace str
+                                    in
+                                    case List.head rest of
+                                        Nothing ->
                                             MElement fname [] (MList (Literal arg :: List.map fromText rest))
 
-                            else
-                                Literal "(I was expecting '[' or '|')"
+                                        Just possibleArg ->
+                                            let
+                                                ( mark2, args2 ) =
+                                                    case possibleArg of
+                                                        Syntax.Annotation prefix_ textList_ maybeSuffix_ maybeLocCommand_ ->
+                                                            let
+                                                                mark_ =
+                                                                    Loc.value prefix_
 
-                        _ ->
-                            Literal "(malformed annotation)"
+                                                                args_ =
+                                                                    List.head textList_
+                                                                        |> Maybe.andThen getText
+                                                                        |> Maybe.map (String.split "," >> List.map String.trim)
+                                                                        |> Maybe.withDefault []
+                                                            in
+                                                            ( mark_, args_ )
 
-        Camp.InlineProblem _ ->
+                                                        _ ->
+                                                            ( "(error)", [] )
+                                            in
+                                            if mark2 == "|" then
+                                                let
+                                                    --args =
+                                                    --    String.split ", " "a:1, b:2" |> List.map String.trim
+                                                    rest2 =
+                                                        List.drop 1 rest
+                                                in
+                                                MElement fname args2 (MList (List.map fromText rest2))
+
+                                            else
+                                                MElement fname [] (MList (Literal arg :: List.map fromText rest))
+
+                                else
+                                    Literal "(I was expecting '[' or '|')"
+
+                            _ ->
+                                Literal "(malformed annotation)"
+
+        Syntax.InlineProblem _ ->
             Literal "(inline problem)"
 
 
 getText t =
     case t of
-        Camp.Raw text ->
+        Syntax.Raw text ->
             Just text
 
         _ ->
